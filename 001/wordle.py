@@ -110,10 +110,10 @@ def solve_wordle(wordle: Wordle, initial_guess: str | None = None) -> str:
     current_guess = initial_guess
 
     while True:
-        clue = wordle.guess(current_guess).split(" ")
-        guesses[current_guess] = "".join(clue)
+        clue = "".join(wordle.guess(current_guess).split(" "))
+        guesses[current_guess] = clue
 
-        if clue == ["🟩"] * 5:
+        if clue == "🟩🟩🟩🟩🟩":
             break
 
         for i, (letter, clue) in enumerate(zip(current_guess, clue)):
