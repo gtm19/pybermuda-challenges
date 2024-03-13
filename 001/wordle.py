@@ -32,18 +32,49 @@ The API URL is:
 https://www.nytimes.com/svc/wordle/v2/YYYY-MM-DD.json
 (replacing YYYY-MM-DD with today's date)
 """
+
 from urllib.request import urlopen
-from random import choice
+from collections import Counter
+
+import requests
+from datetime import date
 
 WORD_LIST_URL = "https://raw.githubusercontent.com/tabatkins/wordle-list/main/words"
 
+
+def sort_words(words: list[str]) -> None:
+    tallies = Counter("".join(words))
+
+    def word_value(word):
+        unique_letters = [letter for letter in word if word.count(letter) <= 2]
+        return sum(tallies.get(letter) for letter in unique_letters)
+
+    words.sort(key=word_value)
+
+
 with urlopen(WORD_LIST_URL) as f:
     WORDS = f.read().decode("utf-8").upper().splitlines()
+    sort_words(WORDS)
+
+
+def word_from_today() -> str:
+    dt_string = date.today().strftime("%Y-%m-%d")
+    url = f"https://www.nytimes.com/svc/wordle/v2/{dt_string}.json"
+
+    response = requests.get(url).json()
+
+    word = response["solution"].upper()
+
+    if word not in WORDS:
+        WORDS.append(word)
+        sort_words(WORDS)
+
+    return word
 
 
 class Wordle:
     def __init__(self, word: str | None = None) -> None:
-        self._secret = word or choice(WORDS)
+        self._secret = word or word_from_today()
         self.clues: list[str] = []
 
     def guess(self, word: str) -> str:
@@ -64,16 +95,48 @@ class Wordle:
         return self.clues[-1]
 
 
-def solve_wordle(wordle: Wordle, initial_guess: str) -> str:
+def solve_wordle(wordle: Wordle, initial_guess: str | None = None) -> str:
     """
     Solves a wordle puzzle using the given initial guess
     """
-    # write your code here 👇👇
-    pass
-    # write your code here 👆👆
+    words = WORDS.copy()
+
+    guesses = {}
+
+    if not initial_guess:
+        initial_guess = words[-1]
+
+    words.remove(initial_guess)
+    current_guess = initial_guess
+
+    while True:
+        clue = wordle.guess(current_guess).split(" ")
+        guesses[current_guess] = "".join(clue)
+
+        if clue == ["🟩"] * 5:
+            break
+
+        for i, (letter, clue) in enumerate(zip(current_guess, clue)):
+            match clue:
+                case "🟩":
+                    words = [word for word in words if letter == word[i]]
+                case "🟨":
+                    words = [
+                        word for word in words if letter in word and letter != word[i]
+                    ]
+                case _:
+                    words = [word for word in words if letter not in word]
+
+        current_guess = words.pop()
+
+    for i, (word, clue) in enumerate(guesses.items()):
+        if i == 6:
+            print("-------------------")
+        print(f"{word} : {clue}")
+
+    return list(guesses)[-1]
 
 
 if __name__ == "__main__":
     game = Wordle()
-    solution = solve_wordle(game, "HELLO")
-    print(f"The solution is {solution}")
+    solution = solve_wordle(game)
