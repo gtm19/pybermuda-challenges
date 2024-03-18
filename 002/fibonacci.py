@@ -26,12 +26,20 @@ previous calculations it had performed?
 """
 
 from time import perf_counter
+from functools import cache
 
 
+@cache
 def fibonacci(n) -> int:
     # write your code here 👇👇
-    pass
-    # write your code here 👆👆
+    if n <= 0:
+        raise ValueError(
+            "This Fibonacci sequence is only defined for positive numbers."
+        )
+    if n <= 2:
+        return n - 1
+    return fibonacci(n - 1) + fibonacci(n - 2)
+    # write your code here 👆 ⁠
 
 
 def check_fibonacci() -> None:
