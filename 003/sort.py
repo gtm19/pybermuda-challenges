@@ -28,18 +28,36 @@ To run the tests simply run `pytest` in the terminal (after having done `pip ins
 """
 
 
-def manual_sort(list: list, *, order: str) -> int:
+def quicksort(list_to_sort: list) -> list:
+    """Implementation of quicksort https://en.wikipedia.org/wiki/Quicksort"""
+    if len(list_to_sort) <= 1:
+        return list_to_sort
+    anchor = list_to_sort[-1]
+    lower = [item for item in list_to_sort[:-1] if item <= anchor]
+    higher = [item for item in list_to_sort[:-1] if item > anchor]
+    return quicksort(lower) + [anchor] + quicksort(higher)
+
+
+def manual_sort(list_to_sort: list, *, order: str) -> int:
     """
     Sorts a list in ascending or descending order based on the given order parameter.
 
     Args:
-        list: The list to be sorted.
-        order: The order in which to sort the list. Can be either "asc" for ascending order or "desc" for descending order.
+        list_to_sort[list]: The list to be sorted.
+        order[str]: The order in which to sort the list. Can be either "asc" for ascending order or "desc" for descending order.
 
     Returns:
         The sorted list.
 
     """
     # WRITE YOUR CODE HERE 👇👇
-    pass
+    sorted_list = quicksort(list_to_sort)
+    if order == "desc":
+        sorted_list = sorted_list[::-1]
+    return sorted_list
     # WRITE YOUR CODE HERE 👆👆
+
+
+if __name__ == "__main__":
+    test_list = ["a", "B", "d", "C"]
+    print(manual_sort(test_list, order="desc"))
